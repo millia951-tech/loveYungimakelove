@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Custom 2048</title>
+<style>
+body {
+  margin: 0;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+#game {
+  width: 90vmin;
+  height: 90vmin;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  background: #222;
+  padding: 10px;
+  border-radius: 16px;
+}
+.cell {
+  background: #333;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+}
+.cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+</style>
+</head>
+<body>
+
+<div id="game"></div>
+
+<script>
+const images = {
+  2: "https://iili.io/qVi1Wzu.jpg",
+  4: "https://iili.io/qVi1lg2.jpg",
+  8: "https://iili.io/qVi1Z7I.png",
+  16: "https://iili.io/qVi1SmF.jpg",
+  32: "https://iili.io/qVi11JS.png",
+  64: "https://iili.io/qVi1gzg.jpg",
+  128: "https://iili.io/qVi1v5P.jpg",
+  256: "https://iili.io/qVi1mIn.jpg",
+  512: "https://iili.io/qVi1tet.jpg",
+  1024: "https://iili.io/qVi1c0l.jpg",
+  2048: "https://iili.io/qVi1DmX.jpg"
+};
+
+let board = Array(16).fill(0);
+
+function addRandom() {
+  let empty = board.map((v,i)=>v===0?i:null).filter(v=>v!==null);
+  if(empty.length===0) return;
+  let idx = empty[Math.floor(Math.random()*empty.length)];
+  board[idx] = Math.random()<0.9?2:4;
+}
+
+function draw() {
+  const game = document.getElementById("game");
+  game.innerHTML = "";
+  board.forEach(v=>{
+    const div = document.createElement("div");
+    div.className = "cell";
+    if(v){
+      const img = document.createElement("img");
+      img.src = images[v] || "";
+      div.appendChild(img);
+    }
+    game.appendChild(div);
+  });
+}
+
+function slide(row){
+  row = row.filter(v=>v);
+  for(let i=0;i<row.length-1;i++){
+    if(row[i]===row[i+1]){
+      row[i]*=2;
+      row[i+1]=0;
+    }
+  }
+  row = row.filter(v=>v);
+  while(row.length<4) row.push(0);
+  return row;
+}
+
+function moveLeft(){
+  for(let i=0;i<4;i++){
+    let row = board.slice(i*4,i*4+4);
+    row = slide(row);
+    for(let j=0;j<4;j++) board[i*4+j]=row[j];
+  }
+}
+
+function rotateClockwise(){
+  let newBoard = Array(16).fill(0);
+  for(let r=0;r<4;r++){
+    for(let c=0;c<4;c++){
+      newBoard[c*4+(3-r)] = board[r*4+c];
+    }
+  }
+  board = newBoard;
+}
+
+function move(direction){
+  // 0: left, 1: up, 2: right, 3: down
+  if(direction === 0){
+    moveLeft();
+  } else if(direction === 1){
+    rotateClockwise(); rotateClockwise(); rotateClockwise();
+    moveLeft();
+    rotateClockwise();
+  } else if(direction === 2){
+    rotateClockwise(); rotateClockwise();
+    moveLeft();
+    rotateClockwise(); rotateClockwise();
+  } else if(direction === 3){
+    rotateClockwise();
+    moveLeft();
+    rotateClockwise(); rotateClockwise(); rotateClockwise();
+  }
+  addRandom();
+  draw();
+}
+
+document.addEventListener("keydown", e=>{
+  if(e.key==="ArrowLeft") move(0);
+  if(e.key==="ArrowUp") move(1);
+  if(e.key==="ArrowRight") move(2);
+  if(e.key==="ArrowDown") move(3);
+});
+
+addRandom();
+addRandom();
+draw();
+</script>
+
+</body>
+</html>
